@@ -1,0 +1,9 @@
+[workspace]
+members = ["dev-projects/*"]
+resolver = "3"
+
+[profile.release-lto]
+inherits = "release"
+strip = true
+lto = true
+codegen-units = 1
