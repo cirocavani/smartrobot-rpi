@@ -94,11 +94,9 @@ Options:
   -V, --version
 ```
 
-## Prompting
+## Hugging Face Login
 
-<https://huggingface.co/google/gemma-2-2b-it>
-
-Hugging Face Login.
+> **(Only required for model download at the first run)**
 
 <https://huggingface.co/docs/hub/security-tokens>
 
@@ -129,7 +127,13 @@ huggingface-cli login --token $HF_TOKEN
 
 unset TF_TOKEN
 deactivate
+
+# FIRST RUN (see Prompting)
 ```
+
+## Prompting
+
+<https://huggingface.co/google/gemma-2-2b-it>
 
 ```sh
 cargo run --profile release-lto -- \
