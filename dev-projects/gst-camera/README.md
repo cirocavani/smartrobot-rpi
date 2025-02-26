@@ -1,0 +1,1 @@
+# GStreamer Example - Camera Capture
