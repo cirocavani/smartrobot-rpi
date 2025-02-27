@@ -1,9 +1,5 @@
 # Candle Example - MetaVoice
 
-> **Not Working on RPi**
->
-> ```Error: A weight is invalid in distribution```
-
 <https://github.com/huggingface/candle/tree/26c16923b92bddda6b05ee1993af47fb6de6ebd7/candle-examples/examples/metavoice>
 
 <https://huggingface.co/metavoiceio/metavoice-1B-v0.1>
@@ -98,24 +94,66 @@ Options:
           Print version
 ```
 
+## Download Models
+
+> Only required if hf-hub does not work (model download is done at the first execution).
+
+```sh
+python -m venv .hf-hub
+source .hf-hub/bin/activate
+pip install --upgrade huggingface-hub
+
+huggingface-cli download lmz/candle-metavoice
+huggingface-cli download facebook/encodec_24khz
+
+deacivate
+```
+
 ## Prompting
 
+> Only quantized model works on RPi.
+>
+> Default model returns ```Error: A weight is invalid in distribution```
+
 <https://huggingface.co/metavoiceio/metavoice-1B-v0.1>
+
+<https://huggingface.co/lmz/candle-metavoice>
 
 ```sh
 cargo run --profile release-lto -- \
 --cpu \
---dtype f16 \
+--quantized \
 --prompt "This is a demo of text to speech by MetaVoice-1B, an open-source foundational audio model."
+
+ls -alh out.wav
+
+# -rw-r--r-- 1 cavani cavani 290K Feb 27 15:17 out.wav
+
+aplay -D sysdefault:CARD=UACDemoV10 --format=S16_LE --rate=16000 out.wav
 ```
 
 Output.
+
+[WAV file](./output/out.wav) (Signed 16 bit Little Endian, Rate 24000 Hz, Mono)
 
 ```text
 avx: false, neon: true, simd128: false, f16c: false
 prompt: 'This is a demo of text to speech by MetaVoice-1B, an open-source foundational audio model.'
 [2133, 2153, 2320, 2388, 2307, 2434, 2158, 2160, 2328, 2305, 2150, 2169, 2165, 2327, 2311, 2456, 2150, 2419, 2452, 2428, 2377, 2146, 2135, 2160, 2355, 2150, 2094, 2098, 2115, 2093, 2399, 2313, 2161, 2325, 2094, 2164, 2483, 2374, 2323, 2514, 2487, 2380, 2307, 2166, 2149, 2154, 2160, 2321, 2160, 2149, 2150, 2157, 2095, 2561]
-Error: A weight is invalid in distribution
+.............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+text ids len: 55
+sampling from logits...
+codes: [[[1109, 1129, 1296, ..., 1024, 1024, 1024],
+  [1024, 1024, 1024, ..., 1024, 1024, 1024],
+  [1024, 1024, 1024, ..., 1024, 1024, 1024],
+  ...
+  [1024, 1024, 1024, ..., 1024, 1024, 1024],
+  [1024, 1024, 1024, ..., 1024, 1024, 1024],
+  [1024, 1024, 1024, ..., 1024, 1024, 1024]]]
+Tensor[[1, 8, 1024], u32]
+text_ids len: 54
+audio_ids shape: [1, 8, 462]
+output pcm shape: [1, 1, 148210]
 ```
 
 ## Code
