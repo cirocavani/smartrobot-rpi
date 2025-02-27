@@ -128,7 +128,6 @@ candle-transformers \
 clap \
 hf-hub \
 rand \
-rand_distr \
 serde \
 serde_json \
 symphonia \

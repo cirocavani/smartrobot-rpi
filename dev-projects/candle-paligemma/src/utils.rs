@@ -50,6 +50,7 @@ pub fn hub_load_safetensors(
     Ok(safetensors_files)
 }
 
+#[allow(dead_code)]
 pub mod token_output_stream {
     use candle_core::Result;
 

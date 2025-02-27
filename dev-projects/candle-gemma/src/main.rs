@@ -1,4 +1,4 @@
-pub mod utils;
+mod utils;
 use utils as candle_examples;
 
 use anyhow::{Error as E, Result};
