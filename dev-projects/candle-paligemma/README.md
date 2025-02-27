@@ -6,10 +6,10 @@
 
 <https://ai.google.dev/gemma/docs/paligemma>
 
-## Build
+## Builds
 
 ```sh
-# dev build
+# Dev build
 
 cargo build
 
@@ -22,7 +22,7 @@ ls -alh ../../target/debug/candle-paligemma
 # -rwxr-xr-x 2 cavani cavani 206M Feb 26 17:50 ../../target/debug/candle-paligemma
 
 
-# release build
+# Release build
 
 cargo build --release
 
@@ -33,6 +33,7 @@ file ../../target/release/candle-paligemma
 ls -alh ../../target/release/candle-paligemma
 
 # -rwxr-xr-x 2 cavani cavani 12M Feb 26 17:56 ../../target/release/candle-paligemma
+
 
 # LTO build
 
@@ -212,5 +213,5 @@ png
 
 ```toml
 [build]
-rustflags = ["-Ctarget-feature=+fp16,+fhm"]
+rustflags = ["-Ctarget-feature=+fp16,+fhm", "-Ctarget-cpu=native"]
 ```

@@ -4,10 +4,10 @@
 
 <https://huggingface.co/collections/google/gemma-2-2b-release-66a20f3796a2ff2a7c76f98f>
 
-## Build
+## Builds
 
 ```sh
-# dev build
+# Dev build
 
 cargo build
 
@@ -20,7 +20,7 @@ ls -alh ../../target/debug/candle-gemma
 # -rwxr-xr-x 2 cavani cavani 200M Feb 26 12:59 ../../target/debug/candle-gemma
 
 
-# release build
+# Release build
 
 cargo build --release
 
@@ -31,6 +31,7 @@ file ../../target/release/candle-gemma
 ls -alh ../../target/release/candle-gemma
 
 # -rwxr-xr-x 2 cavani cavani 12M Feb 26 13:34 ../../target/release/candle-gemma
+
 
 # LTO build
 
@@ -227,5 +228,5 @@ onig
 
 ```toml
 [build]
-rustflags = ["-Ctarget-feature=+fp16,+fhm"]
+rustflags = ["-Ctarget-feature=+fp16,+fhm", "-Ctarget-cpu=native"]
 ```
