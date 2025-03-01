@@ -1184,6 +1184,14 @@ version = "0.0.0"
 [[package]]
 name = "gst-mic"
 version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "gstreamer",
+ "tracing",
+ "tracing-chrome",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "gst-speaker"

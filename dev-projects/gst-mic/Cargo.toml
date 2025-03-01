@@ -2,3 +2,11 @@
 name = "gst-mic"
 version = "0.0.0"
 edition = "2024"
+
+[dependencies]
+anyhow = { version = "1.0.96", features = ["backtrace"] }
+clap = { version = "4.5.31", features = ["derive"] }
+gstreamer = { version = "0.23.5", features = ["v1_22"] }
+tracing = "0.1.41"
+tracing-chrome = "0.7.2"
+tracing-subscriber = "0.3.19"
