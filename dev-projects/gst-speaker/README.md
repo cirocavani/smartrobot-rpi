@@ -17,7 +17,6 @@ gst-launch-1.0 -v -m audiotestsrc ! volume volume=0.25 ! audioconvert ! audiores
 ## GStreamer setup
 
 ```sh
-# Raspberry Pi OS Lite (November 19th 2024) -> Debian 12 (bookworm) -> libgstreamer1.0-dev 1.22.0-2+deb12u1
 # https://gstreamer.freedesktop.org/documentation/rust/stable/latest/docs/gstreamer/#installation-linux
 sudo apt install -y \
 --no-install-recommends \
@@ -180,6 +179,7 @@ Pipeline state changed from Paused to Playing
 ### Dependencies
 
 ```sh
+# Raspberry Pi OS Lite (November 19th 2024) -> Debian 12 (bookworm) -> libgstreamer1.0-dev 1.22.0-2+deb12u1
 
 cargo add \
 anyhow \
