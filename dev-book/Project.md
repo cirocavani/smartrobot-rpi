@@ -1,4 +1,4 @@
-# Embodied AI Project
+# Raspberry Pi AI Project
 
 Hardware:
 

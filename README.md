@@ -1,3 +1,3 @@
-# Programmable Matter - Embodied AI Project
+# Programmable Matter - Raspberry Pi AI Project
 
-Simple Embodied AI project using Raspberry Pi SBC, GStreamer AV and Candle ML.
+Simple Raspberry Pi AI project using RPi 5 SBC, GStreamer AV and Candle ML.
