@@ -8,9 +8,11 @@
 
 <https://libcamera.org/>
 
-<https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/blob/eb1c49729ba6715d41ffb5ce9bd6951c9c5720c7/examples/src/bin/rtsp-server.rs>
+<https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/blob/main/examples/src/bin/rtsp-server.rs>
 
-<https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server>
+<https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/subprojects/gst-rtsp-server/examples/test-launch.c>
+
+<https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-rtsp-server>
 
 RTP
 
@@ -149,9 +151,9 @@ ldd ../../target/release-lto/gst-camera
 
 ## Running
 
-<https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/blob/eb1c49729ba6715d41ffb5ce9bd6951c9c5720c7/examples/src/bin/rtsp-server.rs>
+<https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/blob/main/examples/src/bin/rtsp-server.rs>
 
-<https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/blob/discontinued-for-monorepo/docs/README>
+<https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/subprojects/gst-rtsp-server/docs/README>
 
 ```sh
 # RTSP (Real-Time Streaming Protocol)
