@@ -4,10 +4,6 @@
 
 <https://www.raspberrypi.com/documentation/accessories/camera.html>
 
-<https://github.com/raspberrypi/libcamera>
-
-<https://libcamera.org/>
-
 <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/blob/main/examples/src/bin/rtsp-server.rs>
 
 <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/subprojects/gst-rtsp-server/examples/test-launch.c>
@@ -21,6 +17,38 @@ RTP
 RTSP
 
 <https://en.wikipedia.org/wiki/Real-Time_Streaming_Protocol>
+
+```sh
+gst-launch-1.0 -v \
+libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! \
+queue ! \
+x264enc tune=zerolatency ! \
+rtph264pay ! \
+udpsink host=192.168.72.152 port=5555
+
+gst-launch-1.0 -v \
+udpsrc address=192.168.72.152 port=5555 caps=application/x-rtp ! \
+rtph264depay ! \
+avdec_h264 ! \
+queue ! \
+autovideosink
+```
+
+<https://github.com/raspberrypi/libcamera>
+
+<https://libcamera.org/>
+
+<https://gstreamer.freedesktop.org/documentation/x264/index.html>
+
+<https://gstreamer.freedesktop.org/documentation/libav/avdec_h264.html>
+
+<https://gstreamer.freedesktop.org/documentation/rtp/rtph264pay.html>
+
+<https://gstreamer.freedesktop.org/documentation/rtp/rtph264depay.html>
+
+<https://gstreamer.freedesktop.org/documentation/udp/udpsink.html>
+
+<https://gstreamer.freedesktop.org/documentation/udp/udpsrc.html>
 
 ## GStreamer setup
 
@@ -63,12 +91,87 @@ rpicam-vid --list-cameras
 # Server (Camera)
 
 gst-launch-1.0 -v \
-libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! queue ! x264enc tune=zerolatency ! rtph264pay ! udpsink host=192.168.72.152 port=5555
+libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! \
+queue ! \
+x264enc tune=zerolatency ! \
+rtph264pay ! \
+udpsink host=192.168.72.152 port=5555
+
+# [Server output]
+
 
 # Client (View)
 
 gst-launch-1.0 -v \
-udpsrc address=192.168.72.152 port=5555 caps=application/x-rtp ! rtph264depay ! avdec_h264 ! autovideosink
+udpsrc address=192.168.72.152 port=5555 caps=application/x-rtp ! \
+rtph264depay ! \
+avdec_h264 ! \
+queue ! \
+autovideosink
+
+# [Client output]
+```
+
+Server output.
+
+```text
+Setting pipeline to PAUSED ...
+[4:27:31.949640669] [36902]  INFO Camera camera_manager.cpp:327 libcamera v0.4.0+53-29156679
+[4:27:31.960945084] [36905]  INFO RPI pisp.cpp:720 libpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
+[4:27:32.053479673] [36905]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+New clock: GstSystemClock
+[4:27:32.095649655] [36909]  INFO Camera camera.cpp:1202 configuring streams: (0) 1280x1080-YUV420
+[4:27:32.095827247] [36905]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
+/GstPipeline:pipeline0/GstLibcameraSrc:libcamerasrc0.GstLibcameraPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
+/GstPipeline:pipeline0/GstQueue:queue0.GstPad:sink: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
+/GstPipeline:pipeline0/GstQueue:queue0.GstPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
+Redistribute latency...
+/GstPipeline:pipeline0/GstX264Enc:x264enc0.GstPad:sink: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
+/GstPipeline:pipeline0/GstX264Enc:x264enc0.GstPad:src: caps = video/x-h264, codec_data=(buffer)01640028ffe1001d67640028acb200a0044fcb80b501010140000003004000000f23c60c9201000568ebccb22c, stream-format=(string)avc, alignment=(string)au, level=(string)4, profile=(string)high, width=(int)1280, height=(int)1080, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt709
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0.GstPad:src: caps = application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, packetization-mode=(string)1, sprop-parameter-sets=(string)"Z2QAKKyyAKAET8uAtQEBAUAAAAMAQAAADyPGDJI\=\,aOvMsiw\=", profile-level-id=(string)640028, profile=(string)high, payload=(int)96, ssrc=(uint)144238167, timestamp-offset=(uint)968847408, seqnum-offset=(uint)8380, a-framerate=(string)30
+/GstPipeline:pipeline0/GstUDPSink:udpsink0.GstPad:sink: caps = application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, packetization-mode=(string)1, sprop-parameter-sets=(string)"Z2QAKKyyAKAET8uAtQEBAUAAAAMAQAAADyPGDJI\=\,aOvMsiw\=", profile-level-id=(string)640028, profile=(string)high, payload=(int)96, ssrc=(uint)144238167, timestamp-offset=(uint)968847408, seqnum-offset=(uint)8380, a-framerate=(string)30
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0.GstPad:sink: caps = video/x-h264, codec_data=(buffer)01640028ffe1001d67640028acb200a0044fcb80b501010140000003004000000f23c60c9201000568ebccb22c, stream-format=(string)avc, alignment=(string)au, level=(string)4, profile=(string)high, width=(int)1280, height=(int)1080, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt709
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0: timestamp = 968889772
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0: seqnum = 8380
+Redistribute latency...
+^Chandling interrupt.
+Interrupt: Stopping pipeline ...
+Execution ended after 0:00:45.709384719
+Setting pipeline to NULL ...
+Freeing pipeline ...
+```
+
+Client output.
+
+```text
+# Window showing camera stream (video only)
+
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+/GstPipeline:pipeline0/GstUDPSrc:udpsrc0.GstPad:src: caps = application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264
+/GstPipeline:pipeline0/GstRtpH264Depay:rtph264depay0: extensions = <  >
+New clock: GstSystemClock
+/GstPipeline:pipeline0/GstRtpH264Depay:rtph264depay0.GstPad:sink: caps = application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264
+/GstPipeline:pipeline0/GstRtpH264Depay:rtph264depay0.GstPad:src: caps = video/x-h264, stream-format=(string)avc, alignment=(string)au, codec_data=(buffer)01640028ffe1001d67640028acb200a0044fcb80b501010140000003004000000f23c60c9201000568ebccb22c, level=(string)4, profile=(string)high
+Redistribute latency...
+/GstPipeline:pipeline0/avdec_h264:avdec_h264-0.GstPad:sink: caps = video/x-h264, stream-format=(string)avc, alignment=(string)au, codec_data=(buffer)01640028ffe1001d67640028acb200a0044fcb80b501010140000003004000000f23c60c9201000568ebccb22c, level=(string)4, profile=(string)high
+/GstPipeline:pipeline0/avdec_h264:avdec_h264-0.GstPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, chroma-site=(string)mpeg2, colorimetry=(string)bt709, framerate=(fraction)25/1
+/GstPipeline:pipeline0/GstQueue:queue0.GstPad:sink: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, chroma-site=(string)mpeg2, colorimetry=(string)bt709, framerate=(fraction)25/1
+/GstPipeline:pipeline0/GstQueue:queue0.GstPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, chroma-site=(string)mpeg2, colorimetry=(string)bt709, framerate=(fraction)25/1
+/GstPipeline:pipeline0/GstAutoVideoSink:autovideosink0.GstGhostPad:sink.GstProxyPad:proxypad0: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, chroma-site=(string)mpeg2, colorimetry=(string)bt709, framerate=(fraction)25/1
+/GstPipeline:pipeline0/GstAutoVideoSink:autovideosink0/GstXvImageSink:autovideosink0-actual-sink-xvimage.GstPad:sink: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, chroma-site=(string)mpeg2, colorimetry=(string)bt709, framerate=(fraction)25/1
+/GstPipeline:pipeline0/GstAutoVideoSink:autovideosink0.GstGhostPad:sink: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, chroma-site=(string)mpeg2, colorimetry=(string)bt709, framerate=(fraction)25/1
+Redistribute latency...
+^Chandling interrupt.
+Interrupt: Stopping pipeline ...
+Execution ended after 0:00:26.424863386
+Setting pipeline to NULL ...
+Freeing pipeline ...
 ```
 
 ## Builds
@@ -175,7 +278,11 @@ cargo run --profile release-lto -q -- \
 # 192.168.72.123 -> Server IP Address
 
 gst-launch-1.0 \
-rtspsrc location=rtsp://192.168.72.123:8554/test ! rtph264depay ! avdec_h264 ! autovideosink
+rtspsrc location=rtsp://192.168.72.123:8554/test latency=0 ! \
+rtph264depay ! \
+avdec_h264 ! \
+queue ! \
+autovideosink
 
 # vlc rtsp://192.168.72.123:8554/test
 # ffplay rtsp://192.168.72.123:8554/test -vf "setpts=N/30" -fflags nobuffer -flags low_delay -framedrop
@@ -185,18 +292,19 @@ Server output.
 
 ```text
 Stream ready at rtsp://0.0.0.0:8554/test
-[1:04:50.223883211] [17827]  INFO Camera camera_manager.cpp:327 libcamera v0.4.0+53-29156679
-[1:04:50.235470082] [17828]  INFO RPI pisp.cpp:720 libpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
-[1:04:50.328401789] [17828]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
-[1:04:50.373959264] [17832]  INFO Camera camera.cpp:1202 configuring streams: (0) 1280x1080-YUV420
-[1:04:50.374144784] [17828]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
+[4:32:11.166046643] [37456]  INFO Camera camera_manager.cpp:327 libcamera v0.4.0+53-29156679
+[4:32:11.177700686] [37457]  INFO RPI pisp.cpp:720 libpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
+[4:32:11.269483445] [37457]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
+[4:32:11.313167664] [37461]  INFO Camera camera.cpp:1202 configuring streams: (0) 1280x1080-YUV420
+[4:32:11.313323867] [37457]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
 ^C
 ```
 
 Client output.
 
 ```text
-# Camera Streaming on a Window
+# Window showing camera stream (video only)
+
 Setting pipeline to PAUSED ...
 Pipeline is live and does not need PREROLL ...
 Progress: (open) Opening Stream
@@ -220,7 +328,7 @@ Redistribute latency...
 Redistribute latency...
 ^Chandling interrupt.
 Interrupt: Stopping pipeline ...
-Execution ended after 0:04:47.191618046
+Execution ended after 0:00:27.989928963
 Setting pipeline to NULL ...
 Freeing pipeline ...
 ```
