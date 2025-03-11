@@ -164,6 +164,8 @@ Options:
 cargo run --profile release-lto -- \
 --device=sysdefault:CARD=Device \
 --out-file out.wav
+
+aplay -D sysdefault:CARD=UACDemoV10 --format=S16_LE --rate=44100 out.wav
 ```
 
 Output.
