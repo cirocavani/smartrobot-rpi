@@ -1,3 +1,3 @@
 # Programmable Matter - Raspberry Pi AI Project (Development)
 
-Simple Raspberry Pi AI project using RPi 5 SBC, GStreamer AV and Candle ML.
+Raspberry Pi AI project using RPi 5 SBC, Hugging Face Candle, GStreamer Framework, Eclipse Zenoh and K3s.
