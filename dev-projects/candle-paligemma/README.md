@@ -213,5 +213,8 @@ png
 
 ```toml
 [build]
-rustflags = ["-Ctarget-feature=+fp16,+fhm", "-Ctarget-cpu=native"]
+rustflags = ["-C", "target-cpu=native"]
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["-C", "target-feature=+fp16,+fhm"]
 ```
