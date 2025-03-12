@@ -1,1 +1,610 @@
-# GStreamer Example - WebRTC (Server / Producer / Consumer)
+# GStreamer Example - WebRTC
+
+WebRTC (Web Real-Time Communication)
+
+<https://en.wikipedia.org/wiki/WebRTC>
+
+Server (on device):
+
+- Send audio from microphone
+- Receive audio and play on speaker
+- Send video from camera
+- Receive video (discard, save to file, send back on overlay)
+- Send audio from another source (file, TTS)
+- Send video from another source (file, image)
+
+Client (web browser):
+
+- Send audio from microphone
+- Receive audio and play on speaker
+- Send video from camera
+- Receive video and play on screen
+
+<https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs/-/tree/main/net/webrtc>
+
+<https://crates.io/crates/gst-plugin-webrtc>
+
+<https://crates.io/crates/gst-plugin-rtp>
+
+<https://crates.io/crates/gst-plugin-webrtc-signalling>
+
+<https://docs.rs/crate/gst-plugin-webrtc/latest>
+
+<https://docs.rs/crate/gst-plugin-rtp/latest>
+
+<https://gstreamer.freedesktop.org/documentation/rswebrtc/webrtcsink.html>
+
+<https://gstreamer.freedesktop.org/documentation/rswebrtc/webrtcsrc.html>
+
+## GStreamer setup
+
+```sh
+#
+# Server (test video transmission)
+#
+
+# Raspberry Pi OS Lite (November 19th 2024)
+
+cargo install gst-plugin-webrtc-signalling
+
+gst-webrtc-signalling-server --help
+
+# GStreamer WebRTC sink signalling server
+#
+# Usage: gst-webrtc-signalling-server [OPTIONS]
+#
+# Options:
+#       --host <HOST>                    Address to listen on [default: 0.0.0.0]
+#   -p, --port <PORT>                    Port to listen on [default: 8443]
+#   -c, --cert <CERT>                    TLS certificate to use
+#       --cert-password <CERT_PASSWORD>  password to TLS certificate
+#   -h, --help                           Print help
+#   -V, --version                        Print version
+
+nohup gst-webrtc-signalling-server > webrtc.log &
+
+tail -f webrtc.log
+
+# 2025-03-12T16:02:21.606418Z  INFO ThreadId(01) gst_webrtc_signalling_server: Listening on: 0.0.0.0:8443
+
+
+export GST_PLUGIN_PATH=$PWD/gst-plugins/aarch64-linux-gnu/
+
+ldd $GST_PLUGIN_PATH/libgstrswebrtc.so
+ldd $GST_PLUGIN_PATH/libgstrsrtp.so
+
+gst-inspect-1.0 webrtcsink
+
+gst-launch-1.0 -v \
+videotestsrc ! \
+webrtcsink
+
+# [Server output]
+
+
+#
+# Client (test video reception)
+#
+
+# Ubuntu x86_64
+# 192.168.72.123 <- Server IP Address
+
+export GST_PLUGIN_PATH=$PWD/gst-plugins/x86_64-linux-gnu/
+
+ldd $GST_PLUGIN_PATH/libgstrswebrtc.so
+ldd $GST_PLUGIN_PATH/libgstrsrtp.so
+
+gst-inspect-1.0 webrtcsrc
+
+gst-launch-1.0 -v \
+webrtcsrc connect-to-first-producer=true signaller::uri=ws://192.168.72.123:8443 ! \
+videoconvert ! \
+queue ! \
+autovideosink
+
+# [Client output]
+```
+
+Server output.
+
+```text
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+/GstPipeline:pipeline0/GstVideoTestSrc:videotestsrc0.GstPad:src: caps = video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+New clock: GstSystemClock
+/GstPipeline:pipeline0/GstWebRTCSink:webrtcsink0.GstWebRTCSinkPad:video_0.GstProxyPad:proxypad0: caps = video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstWebRTCSink:webrtcsink0/GstClockSync:clocksync0.GstPad:src: caps = video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstWebRTCSink:webrtcsink0/GstAppSink:appsink0.GstPad:sink: caps = video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstWebRTCSink:webrtcsink0/GstClockSync:clocksync0.GstPad:sink: caps = video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstWebRTCSink:webrtcsink0.GstWebRTCSinkPad:video_0: caps = video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+Redistribute latency...
+
+^Chandling interrupt.
+Interrupt: Stopping pipeline ...
+Execution ended after 0:00:28.532335277
+Setting pipeline to NULL ...
+Freeing pipeline ...
+```
+
+Client output.
+
+```text
+# Window showing test stream (video only)
+
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+New clock: GstSystemClock
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: fec-percentage = 100
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: do-nack = false
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: fec-type = none
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: mlineindex = 0
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: receiver = "\(GstWebRTCRTPReceiver\)\ webrtcrtpreceiver0"
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: sender = "\(GstWebRTCRTPSender\)\ webrtcrtpsender0"
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: name = webrtctransceiver0
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: do-nack = true
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: fec-type = ulp-red
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportStream:transportstream0: session-id = 0
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportStream:transportstream0: name = transportstream0
+Redistribute latency...
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue1: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: signaling-state = have-remote-offer
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0/GstWebRTCRTPSender:webrtcrtpsender0: transport = "\(GstWebRTCDTLSTransport\)\ webrtcdtlstransport0"
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0/GstWebRTCRTPReceiver:webrtcrtpreceiver0: transport = "\(GstWebRTCDTLSTransport\)\ webrtcdtlstransport0"
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin1/GstRtpRtxSend:rtprtxsend0: payload-type-map = application/x-rtp-pt-map, 101=(uint)104, 96=(uint)103;
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRtxReceive:rtprtxreceive0: payload-type-map = application/x-rtp-pt-map, 101=(uint)104, 96=(uint)103;
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin1/GstRtpRtxSend:rtprtxsend0: payload-type-map = application/x-rtp-pt-map, 101=(uint)104, 96=(uint)103;
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRedDec:rtpreddec0: payloads = < (int)101 >
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0: is-client = true
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0: is-client = true
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportStream:transportstream0: dtls-client = true
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue1: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue1: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue1: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: signaling-state = stable
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-gathering-state = gathering
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-connection-state = checking
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-gathering-state = complete
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0: connection-state = new
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0: connection-state = new
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstDtlsDec:dtlsdec0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0.GstPad:src: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstFunnel:funnel0.GstFunnelPad:funnelpad0: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstFunnel:funnel0.GstPad:src: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0.GstGhostPad:src: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstNiceSink:nicesink0.GstPad:sink: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-connection-state = connected
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue1: leaky = no
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0.GstGhostPad:src.GstProxyPad:proxypad2: caps = application/x-dtls
+Redistribute latency...
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstCapsFilter:capsfilter0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue1.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue1.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:sink.GstProxyPad:proxypad5: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstDtlsSrtpDemux:dtlssrtpdemux0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstSrtpDec:srtpdec0.GstPad:rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0.GstGhostPad:rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin.GstGhostPad:recv_rtp_sink_0.GstProxyPad:proxypad23: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSession:rtpsession0.GstPad:recv_rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:sink_0.GstProxyPad:proxypad24: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRtxReceive:rtprtxreceive0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRedDec:rtpreddec0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:src_0: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpStorage:rtpstorage0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSsrcDemux:rtpssrcdemux0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpStorage:rtpstorage0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:src_0.GstProxyPad:proxypad25: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRedDec:rtpreddec0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRtxReceive:rtprtxreceive0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:sink_0: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSession:rtpsession0.GstPad:recv_rtp_sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin.GstGhostPad:recv_rtp_sink_0: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0.GstGhostPad:rtp_src.GstProxyPad:proxypad12: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:rtp_src.GstProxyPad:proxypad3: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0: peer-pem = -----BEGIN CERTIFICATE-----
+MIICpzCCAY+gAwIBAgIJANoQnfBWtabtMA0GCSqGSIb3DQEBCwUAMBMxETAPBgNV
+BAMMCHJLWTJuVHZXMB4XDTI1MDMxMjE3NTkzOVoXDTI2MDMxMjE3NTkzOVowEzER
+MA8GA1UEAwwIcktZMm5UdlcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDqN/SoLLGXvC25+/jJVCYEF2fWi5f5qaAXW/Grcr6vms7aewkwyHBCdqBn6rqc
+x0WQ1B/69itq2egGuxbxYJDoEawItGfS/nUh9RJ3T2bswfgv+dCCBuV2fxfLuBY0
+YjdUUf7star7MbKtlxQ85FPjyOebuebKpwLD+iwmWDoM96c5gmWw7aUA16oHQOo+
+UruD5gHiO8A6ix7mQnbmg1E6Gy/NdHhIHSMM3LJfvohYFGZrAHjgano9qktG4lW5
+IfgS+RPeoKMC7HOuL+FX60Tb2WU9rLtYcJJ4LEvP2vBUTSDA5sJ51Y3xkKn16Kgb
+GMcDhVt0XU66wZRZNtyVmvY/AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAMBNidBt
+IYtdEFLwhDEKBSXY6EqS/HD2f17dHWF8CIrLhaZwEIzNRQwyasAGsSq4JFrzqLNr
+yi4eubLjnPc5333v5VwjMJh+YHDoTQNEVv7As9uy4AVdocKU6fLqkgBrAGepNnC+
+8aedq4aMtW69Ha+ITIw2a1UkaMBWxcofRfIMtaCtNv96w0cDm2zBGK5CqOLTmspN
+Z2AuyDA8wq06KUznHxOs7mMzhOGrzyZQu6uAaQLa2k5kyTW3J36s65vU5XogM3cv
+UlPUyVT0eg/Zg0KxavqJSKwTRQGva6cqdlz0Lcg8DaZZ4DGVPCKe/KSQ8LkCUbya
+kyd8tNhEzkmBajs=
+-----END CERTIFICATE-----
+
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstDtlsDec:dtlsdec0: peer-pem = -----BEGIN CERTIFICATE-----
+MIICpzCCAY+gAwIBAgIJANoQnfBWtabtMA0GCSqGSIb3DQEBCwUAMBMxETAPBgNV
+BAMMCHJLWTJuVHZXMB4XDTI1MDMxMjE3NTkzOVoXDTI2MDMxMjE3NTkzOVowEzER
+MA8GA1UEAwwIcktZMm5UdlcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDqN/SoLLGXvC25+/jJVCYEF2fWi5f5qaAXW/Grcr6vms7aewkwyHBCdqBn6rqc
+x0WQ1B/69itq2egGuxbxYJDoEawItGfS/nUh9RJ3T2bswfgv+dCCBuV2fxfLuBY0
+YjdUUf7star7MbKtlxQ85FPjyOebuebKpwLD+iwmWDoM96c5gmWw7aUA16oHQOo+
+UruD5gHiO8A6ix7mQnbmg1E6Gy/NdHhIHSMM3LJfvohYFGZrAHjgano9qktG4lW5
+IfgS+RPeoKMC7HOuL+FX60Tb2WU9rLtYcJJ4LEvP2vBUTSDA5sJ51Y3xkKn16Kgb
+GMcDhVt0XU66wZRZNtyVmvY/AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAMBNidBt
+IYtdEFLwhDEKBSXY6EqS/HD2f17dHWF8CIrLhaZwEIzNRQwyasAGsSq4JFrzqLNr
+yi4eubLjnPc5333v5VwjMJh+YHDoTQNEVv7As9uy4AVdocKU6fLqkgBrAGepNnC+
+8aedq4aMtW69Ha+ITIw2a1UkaMBWxcofRfIMtaCtNv96w0cDm2zBGK5CqOLTmspN
+Z2AuyDA8wq06KUznHxOs7mMzhOGrzyZQu6uAaQLa2k5kyTW3J36s65vU5XogM3cv
+UlPUyVT0eg/Zg0KxavqJSKwTRQGva6cqdlz0Lcg8DaZZ4DGVPCKe/KSQ8LkCUbya
+kyd8tNhEzkmBajs=
+-----END CERTIFICATE-----
+
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0: peer-pem = -----BEGIN CERTIFICATE-----
+MIICpzCCAY+gAwIBAgIJANoQnfBWtabtMA0GCSqGSIb3DQEBCwUAMBMxETAPBgNV
+BAMMCHJLWTJuVHZXMB4XDTI1MDMxMjE3NTkzOVoXDTI2MDMxMjE3NTkzOVowEzER
+MA8GA1UEAwwIcktZMm5UdlcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDqN/SoLLGXvC25+/jJVCYEF2fWi5f5qaAXW/Grcr6vms7aewkwyHBCdqBn6rqc
+x0WQ1B/69itq2egGuxbxYJDoEawItGfS/nUh9RJ3T2bswfgv+dCCBuV2fxfLuBY0
+YjdUUf7star7MbKtlxQ85FPjyOebuebKpwLD+iwmWDoM96c5gmWw7aUA16oHQOo+
+UruD5gHiO8A6ix7mQnbmg1E6Gy/NdHhIHSMM3LJfvohYFGZrAHjgano9qktG4lW5
+IfgS+RPeoKMC7HOuL+FX60Tb2WU9rLtYcJJ4LEvP2vBUTSDA5sJ51Y3xkKn16Kgb
+GMcDhVt0XU66wZRZNtyVmvY/AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAMBNidBt
+IYtdEFLwhDEKBSXY6EqS/HD2f17dHWF8CIrLhaZwEIzNRQwyasAGsSq4JFrzqLNr
+yi4eubLjnPc5333v5VwjMJh+YHDoTQNEVv7As9uy4AVdocKU6fLqkgBrAGepNnC+
+8aedq4aMtW69Ha+ITIw2a1UkaMBWxcofRfIMtaCtNv96w0cDm2zBGK5CqOLTmspN
+Z2AuyDA8wq06KUznHxOs7mMzhOGrzyZQu6uAaQLa2k5kyTW3J36s65vU5XogM3cv
+UlPUyVT0eg/Zg0KxavqJSKwTRQGva6cqdlz0Lcg8DaZZ4DGVPCKe/KSQ8LkCUbya
+kyd8tNhEzkmBajs=
+-----END CERTIFICATE-----
+
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstDtlsDec:dtlsdec0: peer-pem = -----BEGIN CERTIFICATE-----
+MIICpzCCAY+gAwIBAgIJANoQnfBWtabtMA0GCSqGSIb3DQEBCwUAMBMxETAPBgNV
+BAMMCHJLWTJuVHZXMB4XDTI1MDMxMjE3NTkzOVoXDTI2MDMxMjE3NTkzOVowEzER
+MA8GA1UEAwwIcktZMm5UdlcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDqN/SoLLGXvC25+/jJVCYEF2fWi5f5qaAXW/Grcr6vms7aewkwyHBCdqBn6rqc
+x0WQ1B/69itq2egGuxbxYJDoEawItGfS/nUh9RJ3T2bswfgv+dCCBuV2fxfLuBY0
+YjdUUf7star7MbKtlxQ85FPjyOebuebKpwLD+iwmWDoM96c5gmWw7aUA16oHQOo+
+UruD5gHiO8A6ix7mQnbmg1E6Gy/NdHhIHSMM3LJfvohYFGZrAHjgano9qktG4lW5
+IfgS+RPeoKMC7HOuL+FX60Tb2WU9rLtYcJJ4LEvP2vBUTSDA5sJ51Y3xkKn16Kgb
+GMcDhVt0XU66wZRZNtyVmvY/AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAMBNidBt
+IYtdEFLwhDEKBSXY6EqS/HD2f17dHWF8CIrLhaZwEIzNRQwyasAGsSq4JFrzqLNr
+yi4eubLjnPc5333v5VwjMJh+YHDoTQNEVv7As9uy4AVdocKU6fLqkgBrAGepNnC+
+8aedq4aMtW69Ha+ITIw2a1UkaMBWxcofRfIMtaCtNv96w0cDm2zBGK5CqOLTmspN
+Z2AuyDA8wq06KUznHxOs7mMzhOGrzyZQu6uAaQLa2k5kyTW3J36s65vU5XogM3cv
+UlPUyVT0eg/Zg0KxavqJSKwTRQGva6cqdlz0Lcg8DaZZ4DGVPCKe/KSQ8LkCUbya
+kyd8tNhEzkmBajs=
+-----END CERTIFICATE-----
+
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstSrtpEnc:srtpenc0: random-key = false
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstSrtpEnc:srtpenc0: key = afd7275ef4cbc5e3dd1d095f54865ccd3f41f2232a021e45c951023e805d
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstSrtpEnc:srtpenc0: rtcp-auth = hmac-sha1-80
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstSrtpEnc:srtpenc0: rtp-auth = hmac-sha1-80
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstSrtpEnc:srtpenc0: rtcp-cipher = aes-128-icm
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstSrtpEnc:srtpenc0: rtp-cipher = aes-128-icm
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0: connection-state = connected
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstDtlsDec:dtlsdec0: connection-state = connected
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0: connection-state = connected
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0: connection-state = connected
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0: connection-state = connected
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstSrtpDec:srtpdec0.GstPad:rtcp_src: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:rtcp_src: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0.GstGhostPad:rtcp_src: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin.GstGhostPad:recv_rtcp_sink_0.GstProxyPad:proxypad16: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSession:rtpsession0.GstPad:sync_src: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSsrcDemux:rtpssrcdemux0.GstPad:rtcp_sink: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSession:rtpsession0.GstPad:recv_rtcp_sink: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin.GstGhostPad:recv_rtcp_sink_0: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0.GstGhostPad:rtcp_src.GstProxyPad:proxypad13: caps = application/x-rtcp
+/GstPipeline:pipeline0/GstWebRTCSrc:webrtcsrc0/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:rtcp_src.GstProxyPad:proxypad4: caps = application/x-rtcp
+...
+ERROR: from element /GstPipeline:pipeline0/GstAutoVideoSink:autovideosink0/GstXvImageSink:autovideosink0-actual-sink-xvimage: Output window was closed
+Additional debug info:
+../sys/xvimage/xvimagesink.c(586): gst_xv_image_sink_handle_xevents (): /GstPipeline:pipeline0/GstAutoVideoSink:autovideosink0/GstXvImageSink:autovideosink0-actual-sink-xvimage
+Execution ended after 0:00:06.575047116
+Setting pipeline to NULL ...
+Freeing pipeline ...
+```
+
+### Dependencies
+
+```sh
+# Raspberry Pi OS Lite (November 19th 2024) -> Debian 12 (bookworm) -> libgstreamer1.0-dev 1.22.0-2+deb12u1
+
+# https://gstreamer.freedesktop.org/documentation/rust/stable/latest/docs/gstreamer/#installation-linux
+sudo apt install -y \
+--no-install-recommends \
+libgstreamer1.0-dev \
+libgstreamer-plugins-base1.0-dev \
+libgstreamer-plugins-bad1.0-dev \
+gstreamer1.0-plugins-base \
+gstreamer1.0-plugins-good \
+gstreamer1.0-plugins-bad \
+gstreamer1.0-plugins-ugly \
+gstreamer1.0-libav \
+gstreamer1.0-nice \
+libgstrtspserver-1.0-dev \
+libges-1.0-dev \
+gstreamer1.0-tools
+
+
+cargo add \
+gst-plugin-webrtc \
+gst-plugin-rtp \
+--no-default-features \
+--features \
+gst-plugin-webrtc/v1_22
+
+
+#
+# Raspberry Pi
+#
+
+cargo build --profile release-lto
+
+mkdir -p gst-plugins/aarch64-linux-gnu
+
+find ../../target/release-lto/ -name 'libgstrs*.so'
+
+# ../../target/release-lto/deps/libgstrswebrtc-15eecc23ff7fed17.so
+# ../../target/release-lto/deps/libgstrsrtp-e80ac5fa54a6413a.so
+
+cp ../../target/release-lto/deps/libgstrswebrtc-15eecc23ff7fed17.so gst-plugins/aarch64-linux-gnu/libgstrswebrtc.so
+cp ../../target/release-lto/deps/libgstrsrtp-e80ac5fa54a6413a.so gst-plugins/aarch64-linux-gnu/libgstrsrtp.so
+
+ls -alh gst-plugins/aarch64-linux-gnu/libgstrs*.so
+
+# -rwxr-xr-x 1 cavani cavani 2.3M Mar 12 14:24 gst-plugins/aarch64-linux-gnu/libgstrsrtp.so
+# -rwxr-xr-x 1 cavani cavani 2.5M Mar 12 12:07 gst-plugins/aarch64-linux-gnu/libgstrswebrtc.so
+
+file -b gst-plugins/aarch64-linux-gnu/libgstrs*.so
+
+# ELF 64-bit LSB shared object, ARM aarch64, version 1 (SYSV), dynamically linked, BuildID[sha1]=8e1aaa26da6f95b6fecc6e5ad02871a5dbae6cff, stripped
+# ELF 64-bit LSB shared object, ARM aarch64, version 1 (SYSV), dynamically linked, BuildID[sha1]=97c7090bab0447b68b94a8aeba9d8f0cd9cefdbf, stripped
+
+ldd gst-plugins/aarch64-linux-gnu/libgstrswebrtc.so
+
+# linux-vdso.so.1 (0x00007fff94af8000)
+# libgstnet-1.0.so.0 => /lib/aarch64-linux-gnu/libgstnet-1.0.so.0 (0x00007fff947e0000)
+# libgstreamer-1.0.so.0 => /lib/aarch64-linux-gnu/libgstreamer-1.0.so.0 (0x00007fff94660000)
+# libgobject-2.0.so.0 => /lib/aarch64-linux-gnu/libgobject-2.0.so.0 (0x00007fff945e0000)
+# libglib-2.0.so.0 => /lib/aarch64-linux-gnu/libglib-2.0.so.0 (0x00007fff94480000)
+# libgstaudio-1.0.so.0 => /lib/aarch64-linux-gnu/libgstaudio-1.0.so.0 (0x00007fff943e0000)
+# libgstbase-1.0.so.0 => /lib/aarch64-linux-gnu/libgstbase-1.0.so.0 (0x00007fff94340000)
+# libgstwebrtc-1.0.so.0 => /lib/aarch64-linux-gnu/libgstwebrtc-1.0.so.0 (0x00007fff94310000)
+# libgstsdp-1.0.so.0 => /lib/aarch64-linux-gnu/libgstsdp-1.0.so.0 (0x00007fff942d0000)
+# libgstvideo-1.0.so.0 => /lib/aarch64-linux-gnu/libgstvideo-1.0.so.0 (0x00007fff941f0000)
+# libgstapp-1.0.so.0 => /lib/aarch64-linux-gnu/libgstapp-1.0.so.0 (0x00007fff941b0000)
+# libgstrtp-1.0.so.0 => /lib/aarch64-linux-gnu/libgstrtp-1.0.so.0 (0x00007fff94160000)
+# libssl.so.3 => /lib/aarch64-linux-gnu/libssl.so.3 (0x00007fff940a0000)
+# libcrypto.so.3 => /lib/aarch64-linux-gnu/libcrypto.so.3 (0x00007fff93c20000)
+# libgio-2.0.so.0 => /lib/aarch64-linux-gnu/libgio-2.0.so.0 (0x00007fff93a10000)
+# libgcc_s.so.1 => /lib/aarch64-linux-gnu/libgcc_s.so.1 (0x00007fff939d0000)
+# libm.so.6 => /lib/aarch64-linux-gnu/libm.so.6 (0x00007fff93930000)
+# libc.so.6 => /lib/aarch64-linux-gnu/libc.so.6 (0x00007fff93770000)
+# /lib/ld-linux-aarch64.so.1 (0x00007fff94ac0000)
+# libgmodule-2.0.so.0 => /lib/aarch64-linux-gnu/libgmodule-2.0.so.0 (0x00007fff93740000)
+# libunwind.so.8 => /lib/aarch64-linux-gnu/libunwind.so.8 (0x00007fff936f0000)
+# libdw.so.1 => /lib/aarch64-linux-gnu/libdw.so.1 (0x00007fff93630000)
+# libffi.so.8 => /lib/aarch64-linux-gnu/libffi.so.8 (0x00007fff93600000)
+# libpcre2-8.so.0 => /lib/aarch64-linux-gnu/libpcre2-8.so.0 (0x00007fff93550000)
+# libgsttag-1.0.so.0 => /lib/aarch64-linux-gnu/libgsttag-1.0.so.0 (0x00007fff934f0000)
+# liborc-0.4.so.0 => /lib/aarch64-linux-gnu/liborc-0.4.so.0 (0x00007fff93430000)
+# libgstpbutils-1.0.so.0 => /lib/aarch64-linux-gnu/libgstpbutils-1.0.so.0 (0x00007fff933d0000)
+# libz.so.1 => /lib/aarch64-linux-gnu/libz.so.1 (0x00007fff93390000)
+# libmount.so.1 => /lib/aarch64-linux-gnu/libmount.so.1 (0x00007fff93300000)
+# libselinux.so.1 => /lib/aarch64-linux-gnu/libselinux.so.1 (0x00007fff932b0000)
+# liblzma.so.5 => /lib/aarch64-linux-gnu/liblzma.so.5 (0x00007fff93260000)
+# libelf.so.1 => /lib/aarch64-linux-gnu/libelf.so.1 (0x00007fff93220000)
+# libbz2.so.1.0 => /lib/aarch64-linux-gnu/libbz2.so.1.0 (0x00007fff931f0000)
+# libblkid.so.1 => /lib/aarch64-linux-gnu/libblkid.so.1 (0x00007fff93170000)
+
+ldd gst-plugins/aarch64-linux-gnu/libgstrsrtp.so
+
+# linux-vdso.so.1 (0x00007ffeccf18000)
+# libgstvideo-1.0.so.0 => /lib/aarch64-linux-gnu/libgstvideo-1.0.so.0 (0x00007ffeccb90000)
+# libgstbase-1.0.so.0 => /lib/aarch64-linux-gnu/libgstbase-1.0.so.0 (0x00007ffeccaf0000)
+# libgstreamer-1.0.so.0 => /lib/aarch64-linux-gnu/libgstreamer-1.0.so.0 (0x00007ffecc970000)
+# libgobject-2.0.so.0 => /lib/aarch64-linux-gnu/libgobject-2.0.so.0 (0x00007ffecc8f0000)
+# libglib-2.0.so.0 => /lib/aarch64-linux-gnu/libglib-2.0.so.0 (0x00007ffecc790000)
+# libgstnet-1.0.so.0 => /lib/aarch64-linux-gnu/libgstnet-1.0.so.0 (0x00007ffecc750000)
+# libgstrtp-1.0.so.0 => /lib/aarch64-linux-gnu/libgstrtp-1.0.so.0 (0x00007ffecc700000)
+# libgio-2.0.so.0 => /lib/aarch64-linux-gnu/libgio-2.0.so.0 (0x00007ffecc4f0000)
+# libgcc_s.so.1 => /lib/aarch64-linux-gnu/libgcc_s.so.1 (0x00007ffecc4b0000)
+# libm.so.6 => /lib/aarch64-linux-gnu/libm.so.6 (0x00007ffecc410000)
+# libc.so.6 => /lib/aarch64-linux-gnu/libc.so.6 (0x00007ffecc250000)
+# liborc-0.4.so.0 => /lib/aarch64-linux-gnu/liborc-0.4.so.0 (0x00007ffecc190000)
+# /lib/ld-linux-aarch64.so.1 (0x00007ffeccee0000)
+# libgmodule-2.0.so.0 => /lib/aarch64-linux-gnu/libgmodule-2.0.so.0 (0x00007ffecc160000)
+# libunwind.so.8 => /lib/aarch64-linux-gnu/libunwind.so.8 (0x00007ffecc110000)
+# libdw.so.1 => /lib/aarch64-linux-gnu/libdw.so.1 (0x00007ffecc050000)
+# libffi.so.8 => /lib/aarch64-linux-gnu/libffi.so.8 (0x00007ffecc020000)
+# libpcre2-8.so.0 => /lib/aarch64-linux-gnu/libpcre2-8.so.0 (0x00007ffecbf70000)
+# libz.so.1 => /lib/aarch64-linux-gnu/libz.so.1 (0x00007ffecbf30000)
+# libmount.so.1 => /lib/aarch64-linux-gnu/libmount.so.1 (0x00007ffecbea0000)
+# libselinux.so.1 => /lib/aarch64-linux-gnu/libselinux.so.1 (0x00007ffecbe50000)
+# liblzma.so.5 => /lib/aarch64-linux-gnu/liblzma.so.5 (0x00007ffecbe00000)
+# libelf.so.1 => /lib/aarch64-linux-gnu/libelf.so.1 (0x00007ffecbdc0000)
+# libbz2.so.1.0 => /lib/aarch64-linux-gnu/libbz2.so.1.0 (0x00007ffecbd90000)
+# libblkid.so.1 => /lib/aarch64-linux-gnu/libblkid.so.1 (0x00007ffecbd10000)
+
+export GST_PLUGIN_PATH=$PWD/gst-plugins/aarch64-linux-gnu/
+
+gst-inspect-1.0 rswebrtc
+
+# Plugin Details:
+#   Name                     rswebrtc
+#   Description              GStreamer plugin for high level WebRTC elements and a simple signaling server
+#   Filename                 /home/cavani/Workspace/programmable-matter-rpi/dev-projects/gst-webrtc/gst-plugins/aarch64-linux-gnu/libgstrswebrtc.so
+#   Version                  0.13.5-RELEASE
+#   License                  MPL-2.0
+#   Source module            gst-plugin-webrtc
+#   Documentation            https://gstreamer.freedesktop.org/documentation/rswebrtc/
+#   Source release date      2025-03-04
+#   Binary package           gst-plugin-webrtc
+#   Origin URL               https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs
+#
+#   webrtcsink: WebRTCSink
+#   webrtcsrc: WebRTCSrc
+#
+#   2 features:
+#   +-- 2 elements
+
+gst-inspect-1.0 rsrtp
+
+# Plugin Details:
+#   Name                     rsrtp
+#   Description              GStreamer Rust RTP Plugin
+#   Filename                 /home/cavani/Workspace/programmable-matter-rpi/dev-projects/gst-webrtc/gst-plugins/aarch64-linux-gnu/libgstrsrtp.so
+#   Version                  0.13.5-RELEASE
+#   License                  MPL-2.0
+#   Source module            gst-plugin-rtp
+#   Documentation            https://gstreamer.freedesktop.org/documentation/rsrtp/
+#   Source release date      2025-03-04
+#   Binary package           gst-plugin-rtp
+#   Origin URL               https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs
+#
+#   rtpac3depay2: RTP AC-3 Audio Depayloader
+#   rtpac3pay2: RTP AC-3 Audio Payloader
+#   rtpav1depay: RTP AV1 Depayloader
+#   rtpav1pay: RTP AV1 payloader
+#   rtpgccbwe: Google Congestion Control bandwidth estimator
+#   rtpjpegdepay2: RTP JPEG Depayloader
+#   rtpjpegpay2: RTP JPEG payloader
+#   rtpklvdepay2: RTP KLV Metadata Depayloader
+#   rtpklvpay2: RTP KLV Metadata Payloader
+#   rtpmp2tdepay2: RTP MPEG-TS Depayloader
+#   rtpmp2tpay2: RTP MPEG-TS Payloader
+#   rtpmp4adepay2: RTP MPEG-4 Audio Depayloader
+#   rtpmp4apay2: RTP MPEG-4 Audio Payloader
+#   rtpmp4gdepay2: RTP MPEG-4 Generic ES Depayloader
+#   rtpmp4gpay2: RTP MPEG-4 Generic Payloader
+#   rtpopusdepay2: RTP Opus Depayloader
+#   rtpopuspay2: RTP Opus Payloader
+#   rtppcmadepay2: RTP PCMA Depayloader
+#   rtppcmapay2: RTP PCMA Payloader
+#   rtppcmudepay2: RTP PCMU Depayloader
+#   rtppcmupay2: RTP PCMU Payloader
+#   rtprecv: RTP Session receiver
+#   rtpsend: RTP Session Sender
+#   rtpvp8depay2: RTP VP8 Depayloader
+#   rtpvp8pay2: RTP VP8 payloader
+#   rtpvp9depay2: RTP VP9 Depayloader
+#   rtpvp9pay2: RTP VP9 payloader
+#
+#   27 features:
+#   +-- 27 elements
+
+
+#
+# Ubuntu x86_64
+#
+
+cargo build --profile release-lto
+
+mkdir -p gst-plugins/x86_64-linux-gnu
+
+find ../../target/release-lto/ -name 'libgstrs*.so'
+
+# ../../target/release-lto/deps/libgstrsrtp-3655e826170273c0.so
+# ../../target/release-lto/deps/libgstrswebrtc-5cd145f8fc449d4f.so
+
+cp ../../target/release-lto/deps/libgstrswebrtc-5cd145f8fc449d4f.so gst-plugins/x86_64-linux-gnu/libgstrswebrtc.so
+cp ../../target/release-lto/deps/libgstrsrtp-3655e826170273c0.so gst-plugins/x86_64-linux-gnu/libgstrsrtp.so
+
+ls -alh gst-plugins/x86_64-linux-gnu/libgstrs*.so
+
+# -rwxrwxr-x 1 cavani cavani 2.6M Mar 12 14:36 gst-plugins/x86_64-linux-gnu/libgstrsrtp.so
+# -rwxrwxr-x 1 cavani cavani 2.8M Mar 12 14:36 gst-plugins/x86_64-linux-gnu/libgstrswebrtc.so
+
+file -b gst-plugins/x86_64-linux-gnu/libgstrs*.so
+
+# ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[sha1]=23ca2b6170fc14ad2e86c5dcd70d6943e8edd876, stripped
+# ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[sha1]=d80ec0a15b38c1a93afe1eccb6d817b264df5f26, stripped
+
+ldd gst-plugins/x86_64-linux-gnu/libgstrswebrtc.so
+
+# linux-vdso.so.1 (0x0000727bd6c58000)
+# libgstnet-1.0.so.0 => /lib/x86_64-linux-gnu/libgstnet-1.0.so.0 (0x0000727bd6c12000)
+# libgstreamer-1.0.so.0 => /lib/x86_64-linux-gnu/libgstreamer-1.0.so.0 (0x0000727bd66ab000)
+# libgobject-2.0.so.0 => /lib/x86_64-linux-gnu/libgobject-2.0.so.0 (0x0000727bd6bae000)
+# libglib-2.0.so.0 => /lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x0000727bd655c000)
+# libgstaudio-1.0.so.0 => /lib/x86_64-linux-gnu/libgstaudio-1.0.so.0 (0x0000727bd6b27000)
+# libgstbase-1.0.so.0 => /lib/x86_64-linux-gnu/libgstbase-1.0.so.0 (0x0000727bd64d6000)
+# libgstwebrtc-1.0.so.0 => /lib/x86_64-linux-gnu/libgstwebrtc-1.0.so.0 (0x0000727bd6b11000)
+# libgstsdp-1.0.so.0 => /lib/x86_64-linux-gnu/libgstsdp-1.0.so.0 (0x0000727bd6af5000)
+# libgstvideo-1.0.so.0 => /lib/x86_64-linux-gnu/libgstvideo-1.0.so.0 (0x0000727bd63fe000)
+# libgstapp-1.0.so.0 => /lib/x86_64-linux-gnu/libgstapp-1.0.so.0 (0x0000727bd6ade000)
+# libgstrtp-1.0.so.0 => /lib/x86_64-linux-gnu/libgstrtp-1.0.so.0 (0x0000727bd63cc000)
+# libssl.so.3 => /lib/x86_64-linux-gnu/libssl.so.3 (0x0000727bd62ca000)
+# libcrypto.so.3 => /lib/x86_64-linux-gnu/libcrypto.so.3 (0x0000727bd5c00000)
+# libgio-2.0.so.0 => /lib/x86_64-linux-gnu/libgio-2.0.so.0 (0x0000727bd5a28000)
+# libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x0000727bd629c000)
+# libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x0000727bd61af000)
+# libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x0000727bd5800000)
+# /lib64/ld-linux-x86-64.so.2 (0x0000727bd6c5a000)
+# libgmodule-2.0.so.0 => /lib/x86_64-linux-gnu/libgmodule-2.0.so.0 (0x0000727bd6ad3000)
+# libunwind.so.8 => /lib/x86_64-linux-gnu/libunwind.so.8 (0x0000727bd6194000)
+# libdw.so.1 => /lib/x86_64-linux-gnu/libdw.so.1 (0x0000727bd574b000)
+# libffi.so.8 => /lib/x86_64-linux-gnu/libffi.so.8 (0x0000727bd6ac7000)
+# libatomic.so.1 => /lib/x86_64-linux-gnu/libatomic.so.1 (0x0000727bd6189000)
+# libpcre2-8.so.0 => /lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x0000727bd56ae000)
+# libgsttag-1.0.so.0 => /lib/x86_64-linux-gnu/libgsttag-1.0.so.0 (0x0000727bd566d000)
+# liborc-0.4.so.0 => /lib/x86_64-linux-gnu/liborc-0.4.so.0 (0x0000727bd55bc000)
+# libgstpbutils-1.0.so.0 => /lib/x86_64-linux-gnu/libgstpbutils-1.0.so.0 (0x0000727bd5577000)
+# libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x0000727bd616b000)
+# libzstd.so.1 => /lib/x86_64-linux-gnu/libzstd.so.1 (0x0000727bd54b9000)
+# libmount.so.1 => /lib/x86_64-linux-gnu/libmount.so.1 (0x0000727bd546c000)
+# libselinux.so.1 => /lib/x86_64-linux-gnu/libselinux.so.1 (0x0000727bd543e000)
+# liblzma.so.5 => /lib/x86_64-linux-gnu/liblzma.so.5 (0x0000727bd540b000)
+# libelf.so.1 => /lib/x86_64-linux-gnu/libelf.so.1 (0x0000727bd53ec000)
+# libbz2.so.1.0 => /lib/x86_64-linux-gnu/libbz2.so.1.0 (0x0000727bd53d8000)
+# libblkid.so.1 => /lib/x86_64-linux-gnu/libblkid.so.1 (0x0000727bd539c000)
+
+ldd gst-plugins/x86_64-linux-gnu/libgstrsrtp.so
+
+# linux-vdso.so.1 (0x0000740826379000)
+# libgstvideo-1.0.so.0 => /lib/x86_64-linux-gnu/libgstvideo-1.0.so.0 (0x0000740825f28000)
+# libgstbase-1.0.so.0 => /lib/x86_64-linux-gnu/libgstbase-1.0.so.0 (0x00007408262cf000)
+# libgstreamer-1.0.so.0 => /lib/x86_64-linux-gnu/libgstreamer-1.0.so.0 (0x0000740825dd3000)
+# libgobject-2.0.so.0 => /lib/x86_64-linux-gnu/libgobject-2.0.so.0 (0x0000740825d6f000)
+# libglib-2.0.so.0 => /lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x0000740825c20000)
+# libgstnet-1.0.so.0 => /lib/x86_64-linux-gnu/libgstnet-1.0.so.0 (0x00007408262ab000)
+# libgstrtp-1.0.so.0 => /lib/x86_64-linux-gnu/libgstrtp-1.0.so.0 (0x0000740825bee000)
+# libgio-2.0.so.0 => /lib/x86_64-linux-gnu/libgio-2.0.so.0 (0x0000740825a16000)
+# libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007408259e8000)
+# libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007408258fb000)
+# libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x0000740825600000)
+# /lib64/ld-linux-x86-64.so.2 (0x000074082637b000)
+# liborc-0.4.so.0 => /lib/x86_64-linux-gnu/liborc-0.4.so.0 (0x000074082584a000)
+# libgmodule-2.0.so.0 => /lib/x86_64-linux-gnu/libgmodule-2.0.so.0 (0x00007408262a2000)
+# libunwind.so.8 => /lib/x86_64-linux-gnu/libunwind.so.8 (0x0000740826287000)
+# libdw.so.1 => /lib/x86_64-linux-gnu/libdw.so.1 (0x000074082554b000)
+# libffi.so.8 => /lib/x86_64-linux-gnu/libffi.so.8 (0x000074082583e000)
+# libatomic.so.1 => /lib/x86_64-linux-gnu/libatomic.so.1 (0x0000740825833000)
+# libpcre2-8.so.0 => /lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x00007408254ae000)
+# libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x0000740825490000)
+# libmount.so.1 => /lib/x86_64-linux-gnu/libmount.so.1 (0x0000740825443000)
+# libselinux.so.1 => /lib/x86_64-linux-gnu/libselinux.so.1 (0x0000740825415000)
+# liblzma.so.5 => /lib/x86_64-linux-gnu/liblzma.so.5 (0x00007408253e2000)
+# libelf.so.1 => /lib/x86_64-linux-gnu/libelf.so.1 (0x00007408253c3000)
+# libzstd.so.1 => /lib/x86_64-linux-gnu/libzstd.so.1 (0x0000740825305000)
+# libbz2.so.1.0 => /lib/x86_64-linux-gnu/libbz2.so.1.0 (0x00007408252f1000)
+# libblkid.so.1 => /lib/x86_64-linux-gnu/libblkid.so.1 (0x00007408252b5000)
+
+export GST_PLUGIN_PATH=$PWD/gst-plugins/x86_64-linux-gnu/
+
+gst-inspect-1.0 rswebrtc
+
+# [plugin info]
+
+gst-inspect-1.0 rsrtp
+
+# [plugin info]
+```
