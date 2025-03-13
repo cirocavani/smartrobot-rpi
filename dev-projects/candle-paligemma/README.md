@@ -156,7 +156,7 @@ Un groupe de cyclistes qui sont dans la rue.
 12 tokens generated (0.61 token/s)
 ```
 
-## Code
+## Project
 
 ### Original Code
 

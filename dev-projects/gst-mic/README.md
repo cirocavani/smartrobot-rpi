@@ -177,7 +177,7 @@ Pipeline state changed from Paused to Playing
 ^C
 ```
 
-## Code
+## Project
 
 ### Original Code
 

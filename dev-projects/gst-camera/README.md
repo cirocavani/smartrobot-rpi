@@ -97,7 +97,7 @@ x264enc tune=zerolatency ! \
 rtph264pay ! \
 udpsink host=192.168.72.152 port=5555
 
-# [Server output]
+# -> [Server output]
 
 
 # Client (View)
@@ -109,7 +109,7 @@ avdec_h264 ! \
 queue ! \
 autovideosink
 
-# [Client output]
+# -> [Client output]
 ```
 
 Server output.
@@ -333,7 +333,7 @@ Setting pipeline to NULL ...
 Freeing pipeline ...
 ```
 
-### Dependencies
+## Project
 
 - [gstreamer](https://crates.io/crates/gstreamer): Rust bindings for GStreamer
 - [gstreamer-rtsp-server](https://crates.io/crates/gstreamer-rtsp-server): Rust bindings for GStreamer RTSP Server library

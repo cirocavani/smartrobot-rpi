@@ -178,7 +178,7 @@ Here is a proof that square root of 2 is not rational:
 398 tokens generated (2.07 token/s)
 ```
 
-## Code
+## Project
 
 ### Original Code
 

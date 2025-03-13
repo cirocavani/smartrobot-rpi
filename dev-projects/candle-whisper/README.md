@@ -104,7 +104,7 @@ portuguese: 0.008657803
 0.0s -- 30.0s:  And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.
 ```
 
-## Code
+## Project
 
 ### Original Code
 
