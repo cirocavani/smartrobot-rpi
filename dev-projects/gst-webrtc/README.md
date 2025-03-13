@@ -38,13 +38,9 @@ Client (web browser):
 
 ## GStreamer setup
 
+### WebRTC Signalling Server
+
 ```sh
-#
-# Server (test video transmission)
-#
-
-# Raspberry Pi OS Lite (November 19th 2024)
-
 cargo install gst-plugin-webrtc-signalling
 
 gst-webrtc-signalling-server --help
@@ -66,7 +62,16 @@ nohup gst-webrtc-signalling-server > webrtc.log &
 tail -f webrtc.log
 
 # 2025-03-12T16:02:21.606418Z  INFO ThreadId(01) gst_webrtc_signalling_server: Listening on: 0.0.0.0:8443
+```
 
+### Video Only Test
+
+```sh
+#
+# Server (transmission)
+#
+
+# Raspberry Pi OS Lite (November 19th 2024)
 
 export GST_PLUGIN_PATH=$PWD/gst-plugins/aarch64-linux-gnu/
 
@@ -79,11 +84,11 @@ gst-launch-1.0 -v \
 videotestsrc ! \
 webrtcsink
 
-# [Server output]
+# -> [Server output]
 
 
 #
-# Client (test video reception)
+# Client (reception)
 #
 
 # Ubuntu x86_64
@@ -102,7 +107,7 @@ videoconvert ! \
 queue ! \
 autovideosink
 
-# [Client output]
+# -> [Client output]
 ```
 
 Server output.
@@ -311,6 +316,217 @@ Execution ended after 0:00:06.575047116
 Setting pipeline to NULL ...
 Freeing pipeline ...
 ```
+
+### Audio and Video Test
+
+Codecs:
+
+- Audio: Opus
+- Video: VP8
+
+```sh
+#
+# Server (transmission)
+#
+
+# Raspberry Pi OS Lite (November 19th 2024)
+
+export GST_PLUGIN_PATH=$PWD/gst-plugins/aarch64-linux-gnu/
+
+gst-launch-1.0 -v \
+webrtcsink name=ws \
+audiotestsrc is-live=true wave=red-noise ! \
+audioconvert ! \
+audioresample ! \
+queue ! \
+opusenc perfect-timestamp=true ! \
+ws. \
+videotestsrc is-live=true pattern=ball ! \
+videoconvert ! \
+queue ! \
+vp8enc deadline=1 ! \
+ws.
+
+# -> [Server output]
+
+#
+# Client (reception)
+#
+
+# Ubuntu x86_64
+# 192.168.72.123 <- Server IP Address
+
+export GST_PLUGIN_PATH=$PWD/gst-plugins/x86_64-linux-gnu/
+
+gst-launch-1.0 -v \
+webrtcsrc name=ws connect-to-first-producer=true signaller::uri=ws://192.168.72.123:8443 \
+ws. ! \
+queue ! \
+videoconvert ! \
+autovideosink \
+ws. ! \
+queue ! \
+audioconvert ! \
+audioresample ! \
+autoaudiosink
+
+# -> [Client output]
+```
+
+Server output.
+
+```text
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+New clock: GstSystemClock
+/GstPipeline:pipeline0/GstVideoTestSrc:videotestsrc0.GstPad:src: caps = video/x-raw, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, format=(string)I420, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstVideoConvert:videoconvert0.GstPad:src: caps = video/x-raw, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, format=(string)I420, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstQueue:queue1.GstPad:sink: caps = video/x-raw, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, format=(string)I420, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstQueue:queue1.GstPad:src: caps = video/x-raw, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, format=(string)I420, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstQueue:queue1.GstPad:src: caps = video/x-raw, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, format=(string)I420, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+Redistribute latency...
+/GstPipeline:pipeline0/GstVP8Enc:vp8enc0.GstPad:src: caps = video/x-vp8, profile=(string)0, streamheader=(buffer)< 4f56503830010100014000f00000010000010000001e00000001 >, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt601, chroma-site=(string)jpeg, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono
+/GstPipeline:pipeline0/GstWebRTCSink:ws.GstWebRTCSinkPad:video_0.GstProxyPad:proxypad1: caps = video/x-vp8, profile=(string)0, streamheader=(buffer)< 4f56503830010100014000f00000010000010000001e00000001 >, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt601, chroma-site=(string)jpeg, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono
+/GstPipeline:pipeline0/GstWebRTCSink:ws/GstClockSync:clocksync1.GstPad:src: caps = video/x-vp8, profile=(string)0, streamheader=(buffer)< 4f56503830010100014000f00000010000010000001e00000001 >, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt601, chroma-site=(string)jpeg, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono
+/GstPipeline:pipeline0/GstWebRTCSink:ws/GstAppSink:appsink1.GstPad:sink: caps = video/x-vp8, profile=(string)0, streamheader=(buffer)< 4f56503830010100014000f00000010000010000001e00000001 >, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt601, chroma-site=(string)jpeg, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono
+/GstPipeline:pipeline0/GstWebRTCSink:ws/GstClockSync:clocksync1.GstPad:sink: caps = video/x-vp8, profile=(string)0, streamheader=(buffer)< 4f56503830010100014000f00000010000010000001e00000001 >, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt601, chroma-site=(string)jpeg, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono
+/GstPipeline:pipeline0/GstWebRTCSink:ws.GstWebRTCSinkPad:video_0: caps = video/x-vp8, profile=(string)0, streamheader=(buffer)< 4f56503830010100014000f00000010000010000001e00000001 >, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)bt601, chroma-site=(string)jpeg, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono
+/GstPipeline:pipeline0/GstVP8Enc:vp8enc0.GstPad:sink: caps = video/x-raw, width=(int)320, height=(int)240, framerate=(fraction)30/1, multiview-mode=(string)mono, format=(string)I420, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive
+/GstPipeline:pipeline0/GstAudioTestSrc:audiotestsrc0.GstPad:src: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+Redistribute latency...
+/GstPipeline:pipeline0/GstAudioConvert:audioconvert0.GstPad:src: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+/GstPipeline:pipeline0/GstAudioResample:audioresample0.GstPad:src: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+/GstPipeline:pipeline0/GstQueue:queue0.GstPad:sink: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+/GstPipeline:pipeline0/GstAudioResample:audioresample0.GstPad:sink: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+/GstPipeline:pipeline0/GstQueue:queue0.GstPad:src: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+/GstPipeline:pipeline0/GstQueue:queue0.GstPad:src: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+/GstPipeline:pipeline0/GstOpusEnc:opusenc0.GstPad:sink: caps = audio/x-raw, rate=(int)48000, format=(string)S16LE, channels=(int)1, layout=(string)interleaved
+Redistribute latency...
+/GstPipeline:pipeline0/GstOpusEnc:opusenc0.GstPad:src: caps = audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)< 4f707573486561640101380180bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572206f707573656e63010000001a0000004445534352495054494f4e3d617564696f74657374207761766501 >
+/GstPipeline:pipeline0/GstWebRTCSink:ws.GstWebRTCSinkPad:audio_0.GstProxyPad:proxypad0: caps = audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)< 4f707573486561640101380180bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572206f707573656e63010000001a0000004445534352495054494f4e3d617564696f74657374207761766501 >
+/GstPipeline:pipeline0/GstWebRTCSink:ws/GstClockSync:clocksync0.GstPad:src: caps = audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)< 4f707573486561640101380180bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572206f707573656e63010000001a0000004445534352495054494f4e3d617564696f74657374207761766501 >
+/GstPipeline:pipeline0/GstWebRTCSink:ws/GstAppSink:appsink0.GstPad:sink: caps = audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)< 4f707573486561640101380180bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572206f707573656e63010000001a0000004445534352495054494f4e3d617564696f74657374207761766501 >
+/GstPipeline:pipeline0/GstWebRTCSink:ws/GstClockSync:clocksync0.GstPad:sink: caps = audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)< 4f707573486561640101380180bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572206f707573656e63010000001a0000004445534352495054494f4e3d617564696f74657374207761766501 >
+/GstPipeline:pipeline0/GstWebRTCSink:ws.GstWebRTCSinkPad:audio_0: caps = audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)< 4f707573486561640101380180bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572206f707573656e63010000001a0000004445534352495054494f4e3d617564696f74657374207761766501 >
+Redistribute latency...
+
+^Chandling interrupt.
+Interrupt: Stopping pipeline ...
+Execution ended after 0:00:18.055821149
+Setting pipeline to NULL ...
+Freeing pipeline ...
+```
+
+Client output.
+
+```text
+# Window showing test stream and playing noise.
+
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+New clock: GstSystemClock
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: fec-percentage = 100
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: do-nack = false
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: fec-type = none
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: mlineindex = 0
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: receiver = "\(GstWebRTCRTPReceiver\)\ webrtcrtpreceiver0"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: sender = "\(GstWebRTCRTPSender\)\ webrtcrtpsender0"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: name = webrtctransceiver0
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: do-nack = true
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0: fec-type = ulp-red
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: fec-percentage = 100
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: do-nack = false
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: fec-type = none
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: mlineindex = 0
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: receiver = "\(GstWebRTCRTPReceiver\)\ webrtcrtpreceiver1"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: sender = "\(GstWebRTCRTPSender\)\ webrtcrtpsender1"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: name = webrtctransceiver1
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: do-nack = true
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1: fec-type = ulp-red
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportStream:transportstream0: session-id = 0
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportStream:transportstream0: name = transportstream0
+Redistribute latency...
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0: signaling-state = have-remote-offer
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0/GstWebRTCRTPSender:webrtcrtpsender0: transport = "\(GstWebRTCDTLSTransport\)\ webrtcdtlstransport0"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver0/GstWebRTCRTPReceiver:webrtcrtpreceiver0: transport = "\(GstWebRTCDTLSTransport\)\ webrtcdtlstransport0"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1/GstWebRTCRTPSender:webrtcrtpsender1: transport = "\(GstWebRTCDTLSTransport\)\ webrtcdtlstransport0"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/WebRTCTransceiver:webrtctransceiver1/GstWebRTCRTPReceiver:webrtcrtpreceiver1: transport = "\(GstWebRTCDTLSTransport\)\ webrtcdtlstransport0"
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin1/GstRtpRtxSend:rtprtxsend0: payload-type-map = application/x-rtp-pt-map, 97=(uint)100, 96=(uint)99;
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRtxReceive:rtprtxreceive0: payload-type-map = application/x-rtp-pt-map, 97=(uint)100, 96=(uint)99;
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin1/GstRtpRtxSend:rtprtxsend0: payload-type-map = application/x-rtp-pt-map, 97=(uint)100, 96=(uint)99;
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRedDec:rtpreddec0: payloads = < (int)97 >
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0: is-client = true
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0: is-client = true
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportStream:transportstream0: dtls-client = true
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2: leaky = downstream
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0: signaling-state = stable
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-gathering-state = gathering
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-connection-state = checking
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-gathering-state = complete
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0: connection-state = new
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0: connection-state = new
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstDtlsDec:dtlsdec0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0: connection-state = connecting
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstDtlsEnc:dtlsenc0.GstPad:src: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstFunnel:funnel0.GstFunnelPad:funnelpad0: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0/GstFunnel:funnel0.GstPad:src: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0.GstGhostPad:src: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstNiceSink:nicesink0.GstPad:sink: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportSendBin:transportsendbin0/GstDtlsSrtpEnc:dtlssrtpenc0.GstGhostPad:src.GstProxyPad:proxypad4: caps = application/x-dtls
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2: leaky = no
+Redistribute latency...
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0: ice-connection-state = connected
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstCapsFilter:capsfilter0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstQueue:queue2.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:sink.GstProxyPad:proxypad7: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstDtlsSrtpDemux:dtlssrtpdemux0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0/GstSrtpDec:srtpdec0.GstPad:rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0.GstGhostPad:rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin.GstGhostPad:recv_rtp_sink_0.GstProxyPad:proxypad25: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSession:rtpsession0.GstPad:recv_rtp_src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:sink_0.GstProxyPad:proxypad26: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRtxReceive:rtprtxreceive0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRedDec:rtpreddec0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:src_0: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpStorage:rtpstorage0.GstPad:src: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSsrcDemux:rtpssrcdemux0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpStorage:rtpstorage0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:src_0.GstProxyPad:proxypad27: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRedDec:rtpreddec0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2/GstRtpRtxReceive:rtprtxreceive0.GstPad:sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstBin:bin2.GstGhostPad:sink_0: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin/GstRtpSession:rtpsession0.GstPad:recv_rtp_sink: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/GstRtpBin:rtpbin.GstGhostPad:recv_rtp_sink_0: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0.GstGhostPad:rtp_src.GstProxyPad:proxypad14: caps = application/x-rtp
+/GstPipeline:pipeline0/GstWebRTCSrc:ws/GstBin:bin0/GstWebRTCBin:webrtcbin0/TransportReceiveBin:transportreceivebin0/GstDtlsSrtpDec:dtlssrtpdec0.GstGhostPad:rtp_src.GstProxyPad:proxypad5: caps = application/x-rtp
+[REMOVED]
+
+^Chandling interrupt.
+Interrupt: Stopping pipeline ...
+Execution ended after 0:00:06.649914437
+Setting pipeline to NULL ...
+Freeing pipeline ...
+```
+
+### Camera and Microphone
+
+TBD
+
+## Project
 
 ### Dependencies
 
