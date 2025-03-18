@@ -1097,16 +1097,15 @@ Implications:
 Solution:
 
 - Create a new CA (Certificate Authority) keys
-- Create server keys signed by the new CA key (chain)
+- Create server keys signed by the new CA key
 - Import CA Certificate on Linux (ca-certificates package)
 - Import CA Certificate into Firefox
 
 Files:
 
-- `[machine_id]_ca-key.pem`
-- `[machine_id]_ca-cert.pem`
-- `[machine_id]_ca.crt`
-- `[machine_id]_server.p12`
+- `[machine_id]_ca.key`: custom CA private key
+- `[machine_id]_ca.crt`: custom CA certificate (public key)
+- `[machine_id]_server.p12`: Server Key Store (signed by the custom CA)
 
 
 ```sh
@@ -1393,7 +1392,7 @@ sudo update-ca-certificates
 # done
 
 
-# Firefox - Add Root CA Certificate
+# Firefox - Import Root CA Certificate
 
 # 1. Open Settings
 # 2. Open Privacy & Security
@@ -1413,7 +1412,7 @@ sudo update-ca-certificates
 sudo sed -i '0,/localhost/s//localhost webrtc.olivia-v1.machine-domain/' /etc/hosts
 
 # On Client
-# Server IP Address: 192.168.72.123
+# 192.168.72.123 <- Server IP Address
 
 echo '
 
@@ -1424,8 +1423,7 @@ sudo tee -a /etc/hosts
 
 # Test
 
-
-# HTTP Server with TLS
+# Start HTTP Server with TLS
 
 cargo binstall simple-http-server
 simple-http-server --cert olivia-v1_server.p12
@@ -1441,7 +1439,7 @@ simple-http-server --cert olivia-v1_server.p12
 # [2025-03-18 13:50:50] - 192.168.72.152 - 200 - HEAD /
 
 
-# HTTP Client
+# Run HTTP Client
 
 curl -vI https://webrtc.olivia-v1.machine-domain:8000/
 
@@ -1493,7 +1491,10 @@ curl -vI https://webrtc.olivia-v1.machine-domain:8000/
 # * shutting down connection #0
 # * TLSv1.2 (OUT), TLS alert, close notify (256):
 
+
 # Firefox
 
 firefox --private-window https://webrtc.olivia-v1.machine-domain:8000/
+
+# Should open with no security warnings
 ```
