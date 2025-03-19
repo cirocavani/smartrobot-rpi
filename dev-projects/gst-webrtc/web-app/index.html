@@ -240,6 +240,7 @@
           captureSection.classList.add("starting");
 
           const constraints = {
+            audio: true,
             video: { width: 1280, height: 720 }
           };
           navigator.mediaDevices.getUserMedia(constraints).then((stream) => {

@@ -764,6 +764,20 @@ simple-http-server -i web-app/ --cert pki/olivia-v1_server.p12
 firefox --private-window https://webrtc.olivia-v1.machine-domain:8000/
 
 # (section Remote Streams, click on peer id)
+
+
+# Server comsumer audio
+# 6fc25cdb-1ead-4d61-842d-fe0170221d94 <- Client ID on the Web App page
+
+export GST_PLUGIN_PATH=$PWD/gst-plugins/aarch64-linux-gnu/
+
+gst-launch-1.0 -v \
+webrtcsrc signaller::producer-peer-id=6fc25cdb-1ead-4d61-842d-fe0170221d94 signaller::uri=wss://webrtc.olivia-v1.machine-domain:8443 ! \
+queue ! \
+volume volume=0.25 ! \
+audioconvert ! \
+audioresample ! \
+alsasink device=sysdefault:CARD=UACDemoV10
 ```
 
 ## Project
