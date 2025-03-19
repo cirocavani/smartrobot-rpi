@@ -7,8 +7,8 @@ WebRTC (Web Real-Time Communication)
 Server (on device):
 
 - Send audio from microphone
-- Receive audio and play on speaker
 - Send video from camera
+- Receive audio and play on speaker
 - Receive video (discard, save to file, send back on overlay)
 - Send audio from another source (file, TTS)
 - Send video from another source (file, image)
@@ -16,8 +16,8 @@ Server (on device):
 Client (web browser):
 
 - Send audio from microphone
-- Receive audio and play on speaker
 - Send video from camera
+- Receive audio and play on speaker
 - Receive video and play on screen
 
 <https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs/-/tree/main/net/webrtc>
@@ -772,7 +772,7 @@ gstreamer1.0-tools
 
 ### GStreamer WebRTC Javascript API
 
-[README](./web-app/README.md).
+[README](./web-app/README.md)
 
 ### HTTPS, WSS, Custom CA
 
