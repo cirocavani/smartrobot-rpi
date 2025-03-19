@@ -97,6 +97,7 @@ webrtcsink
 export GST_PLUGIN_PATH=$PWD/gst-plugins/x86_64-linux-gnu/
 
 ldd $GST_PLUGIN_PATH/libgstrswebrtc.so
+
 ldd $GST_PLUGIN_PATH/libgstrsrtp.so
 
 gst-inspect-1.0 webrtcsrc
@@ -644,13 +645,13 @@ Freeing pipeline ...
 <https://crates.io/crates/simple-http-server>
 
 ```sh
-# Start Signalling server
+# Signalling server
 
 
 gst-webrtc-signalling-server --cert pki/olivia-v1_server.p12
 
 
-# Start Server streaming
+# Streaming pipeline (server)
 
 
 export GST_PLUGIN_PATH=$PWD/gst-plugins/aarch64-linux-gnu/
@@ -670,7 +671,7 @@ vp8enc deadline=1 ! \
 ws.
 
 
-# Start Server web app
+# Web App HTTP server
 
 
 cargo binstall simple-http-server
@@ -678,7 +679,7 @@ cargo binstall simple-http-server
 simple-http-server -i web-app/ --cert pki/olivia-v1_server.p12
 
 
-# Client Browser
+# Client Web Browser
 
 
 firefox --private-window https://webrtc.olivia-v1.machine-domain:8000/
@@ -1111,7 +1112,7 @@ Files:
 ```sh
 sudo apt install openssl
 
-mkdir -p pki
+mkdir -p pki/
 cd pki/
 
 
@@ -1223,7 +1224,7 @@ openssl x509 -in olivia-v1_ca.crt -noout -text
 #         f3:29:d8:e5:71:2d:fb:e
 
 
-# Create the server keys
+# Create the server keys (signed by the custom CA)
 
 
 # CSR (Certificate Signing Request)
@@ -1237,7 +1238,7 @@ openssl req \
 -subj '/CN=*.olivia-v1.machine-domain'
 
 
-# Subject Alternate Names
+# Subject Alternative Names
 # https://man.openbsd.org/x509v3.cnf.5#Subject_alternative_name
 
 # Firefox
@@ -1425,7 +1426,8 @@ sudo tee -a /etc/hosts
 
 # Start HTTP Server with TLS
 
-cargo binstall simple-http-server
+# cargo binstall simple-http-server
+
 simple-http-server --cert olivia-v1_server.p12
 
 #      Index: disabled, Cache: enabled, Cors: disabled, Coop: disabled, Coep: disabled, Range:
