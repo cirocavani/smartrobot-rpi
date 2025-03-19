@@ -50,7 +50,7 @@ autovideosink
 
 <https://gstreamer.freedesktop.org/documentation/udp/udpsrc.html>
 
-## GStreamer setup
+## Prototyping
 
 ```sh
 # Raspberry Pi OS Lite (November 19th 2024)
@@ -112,7 +112,8 @@ autovideosink
 # -> [Client output]
 ```
 
-Server output.
+<details>
+<summary>Server output.</summary>
 
 ```text
 Setting pipeline to PAUSED ...
@@ -143,8 +144,10 @@ Execution ended after 0:00:45.709384719
 Setting pipeline to NULL ...
 Freeing pipeline ...
 ```
+</details>
 
-Client output.
+<details>
+<summary>Client output.</summary>
 
 ```text
 # Window showing camera stream (video only)
@@ -173,6 +176,7 @@ Execution ended after 0:00:26.424863386
 Setting pipeline to NULL ...
 Freeing pipeline ...
 ```
+</details>
 
 ## Builds
 
@@ -288,7 +292,8 @@ autovideosink
 # ffplay rtsp://192.168.72.123:8554/test -vf "setpts=N/30" -fflags nobuffer -flags low_delay -framedrop
 ```
 
-Server output.
+<details>
+<summary>Server output.</summary>
 
 ```text
 Stream ready at rtsp://0.0.0.0:8554/test
@@ -299,8 +304,10 @@ Stream ready at rtsp://0.0.0.0:8554/test
 [4:32:11.313323867] [37457]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
 ^C
 ```
+</details>
 
-Client output.
+<details>
+<summary>Client output.</summary>
 
 ```text
 # Window showing camera stream (video only)
@@ -332,6 +339,7 @@ Execution ended after 0:00:27.989928963
 Setting pipeline to NULL ...
 Freeing pipeline ...
 ```
+</details>
 
 ## Project
 

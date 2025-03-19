@@ -14,7 +14,7 @@ gst-launch-1.0 -v -m audiotestsrc ! volume volume=0.25 ! audioconvert ! audiores
 
 <https://gstreamer.freedesktop.org/documentation/alsa/alsasink.html>
 
-## GStreamer setup
+## Prototyping
 
 ```sh
 # https://gstreamer.freedesktop.org/documentation/rust/stable/latest/docs/gstreamer/#installation-linux

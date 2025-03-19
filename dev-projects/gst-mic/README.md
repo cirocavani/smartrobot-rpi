@@ -12,7 +12,7 @@ gst-launch-1.0 -v -m alsasrc device=sysdefault:CARD=Device ! queue ! audioconver
 
 <https://gstreamer.freedesktop.org/documentation/coreelements/filesink.html>
 
-## GStreamer setup
+## Prototyping
 
 ```sh
 # https://gstreamer.freedesktop.org/documentation/rust/stable/latest/docs/gstreamer/#installation-linux

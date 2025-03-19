@@ -36,7 +36,31 @@ Client (web browser):
 
 <https://gstreamer.freedesktop.org/documentation/rswebrtc/webrtcsrc.html>
 
-## GStreamer setup
+## Prototyping
+
+### GStreamer setup
+
+```sh
+# Raspberry Pi OS Lite (November 19th 2024) -> Debian 12 (bookworm) -> libgstreamer1.0-dev 1.22.0-2+deb12u1
+
+# https://gstreamer.freedesktop.org/documentation/rust/stable/latest/docs/gstreamer/#installation-linux
+sudo apt install -y \
+--no-install-recommends \
+libgstreamer1.0-dev \
+libgstreamer-plugins-base1.0-dev \
+libgstreamer-plugins-bad1.0-dev \
+gstreamer1.0-plugins-base \
+gstreamer1.0-plugins-good \
+gstreamer1.0-plugins-bad \
+gstreamer1.0-plugins-ugly \
+gstreamer1.0-libav \
+gstreamer1.0-nice \
+libgstrtspserver-1.0-dev \
+libges-1.0-dev \
+gstreamer1.0-libcamera \
+gstreamer1.0-alsa \
+gstreamer1.0-tools
+```
 
 ### GStreamer WebRTC Signalling Server
 
@@ -743,28 +767,6 @@ firefox --private-window https://webrtc.olivia-v1.machine-domain:8000/
 ```
 
 ## Project
-
-### Dependencies
-
-```sh
-# Raspberry Pi OS Lite (November 19th 2024) -> Debian 12 (bookworm) -> libgstreamer1.0-dev 1.22.0-2+deb12u1
-
-# https://gstreamer.freedesktop.org/documentation/rust/stable/latest/docs/gstreamer/#installation-linux
-sudo apt install -y \
---no-install-recommends \
-libgstreamer1.0-dev \
-libgstreamer-plugins-base1.0-dev \
-libgstreamer-plugins-bad1.0-dev \
-gstreamer1.0-plugins-base \
-gstreamer1.0-plugins-good \
-gstreamer1.0-plugins-bad \
-gstreamer1.0-plugins-ugly \
-gstreamer1.0-libav \
-gstreamer1.0-nice \
-libgstrtspserver-1.0-dev \
-libges-1.0-dev \
-gstreamer1.0-tools
-```
 
 ### GStreamer WebRTC Plugin
 
