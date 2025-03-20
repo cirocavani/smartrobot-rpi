@@ -516,7 +516,7 @@ audioresample ! \
 queue ! \
 opusenc perfect-timestamp=true ! \
 ws. \
-libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! \
+libcamerasrc camera-name=/base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a ! \
 videoconvert ! \
 queue ! \
 vp8enc deadline=1 ! \
@@ -556,7 +556,7 @@ autoaudiosink
 Setting pipeline to PAUSED ...
 [1:25:19.081789213] [6374]  INFO Camera camera_manager.cpp:327 libcamera v0.4.0+53-29156679
 [1:25:19.089652889] [6377]  INFO RPI pisp.cpp:720 libpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
-[1:25:19.178314477] [6377]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media1 and ISP device /dev/media0 using PiSP variant BCM2712_C0
+[1:25:19.178314477] [6377]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media1 and ISP device /dev/media0 using PiSP variant BCM2712_C0
 Pipeline is live and does not need PREROLL ...
 Pipeline is PREROLLED ...
 Setting pipeline to PLAYING ...
@@ -581,7 +581,7 @@ Redistribute latency...
 /GstPipeline:pipeline0/GstWebRTCSink:ws.GstWebRTCSinkPad:audio_0: caps = audio/x-opus, rate=(int)48000, channels=(int)1, channel-mapping-family=(int)0, stream-count=(int)1, coupled-count=(int)0, streamheader=(buffer)< 4f707573486561640101380180bb0000000000, 4f707573546167731e000000456e636f6465642077697468204753747265616d6572206f707573656e630000000001 >
 Redistribute latency...
 [1:25:19.302366013] [6382]  INFO Camera camera.cpp:1202 configuring streams: (0) 1280x1080-YUV420
-[1:25:19.302522457] [6377]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
+[1:25:19.302522457] [6377]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
 /GstPipeline:pipeline0/GstLibcameraSrc:libcamerasrc0.GstLibcameraPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
 /GstPipeline:pipeline0/GstVideoConvert:videoconvert0.GstPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
 /GstPipeline:pipeline0/GstQueue:queue1.GstPad:sink: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
@@ -743,7 +743,7 @@ audioresample ! \
 queue ! \
 opusenc perfect-timestamp=true ! \
 ws. \
-libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! \
+libcamerasrc camera-name=/base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a ! \
 videoconvert ! \
 queue ! \
 vp8enc deadline=1 ! \

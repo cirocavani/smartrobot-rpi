@@ -20,7 +20,7 @@ RTSP
 
 ```sh
 gst-launch-1.0 -v \
-libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! \
+libcamerasrc camera-name=/base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a ! \
 queue ! \
 x264enc tune=zerolatency ! \
 rtph264pay ! \
@@ -77,7 +77,7 @@ rpicam-vid --list-cameras
 # [Output]
 # Available cameras
 # -----------------
-# 0 : imx708 [4608x2592 10-bit RGGB] (/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a)
+# 0 : imx708 [4608x2592 10-bit RGGB] (/base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a)
 #     Modes: 'SRGGB10_CSI2P' : 1536x864 [120.13 fps - (768, 432)/3072x1728 crop]
 #                              2304x1296 [56.03 fps - (0, 0)/4608x2592 crop]
 #                              4608x2592 [14.35 fps - (0, 0)/4608x2592 crop]
@@ -91,7 +91,7 @@ rpicam-vid --list-cameras
 # Server (Camera)
 
 gst-launch-1.0 -v \
-libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! \
+libcamerasrc camera-name=/base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a ! \
 queue ! \
 x264enc tune=zerolatency ! \
 rtph264pay ! \
@@ -119,13 +119,13 @@ autovideosink
 Setting pipeline to PAUSED ...
 [4:27:31.949640669] [36902]  INFO Camera camera_manager.cpp:327 libcamera v0.4.0+53-29156679
 [4:27:31.960945084] [36905]  INFO RPI pisp.cpp:720 libpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
-[4:27:32.053479673] [36905]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
+[4:27:32.053479673] [36905]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
 Pipeline is live and does not need PREROLL ...
 Pipeline is PREROLLED ...
 Setting pipeline to PLAYING ...
 New clock: GstSystemClock
 [4:27:32.095649655] [36909]  INFO Camera camera.cpp:1202 configuring streams: (0) 1280x1080-YUV420
-[4:27:32.095827247] [36905]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
+[4:27:32.095827247] [36905]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
 /GstPipeline:pipeline0/GstLibcameraSrc:libcamerasrc0.GstLibcameraPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
 /GstPipeline:pipeline0/GstQueue:queue0.GstPad:sink: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
 /GstPipeline:pipeline0/GstQueue:queue0.GstPad:src: caps = video/x-raw, format=(string)I420, width=(int)1280, height=(int)1080, colorimetry=(string)bt709, framerate=(fraction)30/1
@@ -269,7 +269,7 @@ ldd ../../target/release-lto/gst-camera
 # Server (Camera)
 
 cargo run --profile release-lto -q -- \
-"( libcamerasrc camera-name=/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a ! queue ! x264enc tune=zerolatency ! rtph264pay name=pay0 )"
+"( libcamerasrc camera-name=/base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a ! queue ! x264enc tune=zerolatency ! rtph264pay name=pay0 )"
 
 # Server (Test Video Source) - Alternative
 
@@ -299,9 +299,9 @@ autovideosink
 Stream ready at rtsp://0.0.0.0:8554/test
 [4:32:11.166046643] [37456]  INFO Camera camera_manager.cpp:327 libcamera v0.4.0+53-29156679
 [4:32:11.177700686] [37457]  INFO RPI pisp.cpp:720 libpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
-[4:32:11.269483445] [37457]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
+[4:32:11.269483445] [37457]  INFO RPI pisp.cpp:1179 Registered camera /base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
 [4:32:11.313167664] [37461]  INFO Camera camera.cpp:1202 configuring streams: (0) 1280x1080-YUV420
-[4:32:11.313323867] [37457]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
+[4:32:11.313323867] [37457]  INFO RPI pisp.cpp:1484 Sensor: /base/axi/pcie@1000120000/rp1/i2c@88000/imx708@1a - Selected sensor format: 2304x1296-SBGGR10_1X10 - Selected CFE format: 2304x1296-PC1B
 ^C
 ```
 </details>
