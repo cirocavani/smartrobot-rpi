@@ -44,7 +44,7 @@ Files:
 
 
 ```sh
-# PWD <- Project Home 'programmable-matter-rpi/dev-projects/gst-webrtc/'
+# PWD <- Project Home 'smartrobot-rpi/dev-projects/gst-webrtc/'
 
 sudo apt install openssl
 
@@ -371,7 +371,7 @@ simple-http-server --cert olivia-v1_server.p12
 #           Upload: disabled, CSRF Token:
 #           Auth: disabled, Compression: disabled
 #          https: enabled, Cert: olivia-v1_server.p12, Cert-Password:
-#           Root: /home/cavani/Workspace/programmable-matter-rpi/dev-projects/gst-webrtc/pki,
+#           Root: /home/cavani/Workspace/smartrobot-rpi/dev-projects/gst-webrtc/pki,
 #     TryFile404:
 #        Address: https://0.0.0.0:8000
 #     ======== [2025-03-18 13:50:40] ========

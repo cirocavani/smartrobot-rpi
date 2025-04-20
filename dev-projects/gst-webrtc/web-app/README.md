@@ -3,7 +3,7 @@
 <https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs/-/tree/0.13.5/net/webrtc/gstwebrtc-api>
 
 ```sh
-# PWD <- Project Home 'programmable-matter-rpi/dev-projects/gst-webrtc/'
+# PWD <- Project Home 'smartrobot-rpi/dev-projects/gst-webrtc/'
 
 sudo apt install --no-install-recommends nodejs npm
 

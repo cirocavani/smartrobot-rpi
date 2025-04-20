@@ -1,7 +1,7 @@
 # GStreamer WebRTC Plugin build
 
 ```sh
-# PWD <- Project Home 'programmable-matter-rpi/dev-projects/gst-webrtc/'
+# PWD <- Project Home 'smartrobot-rpi/dev-projects/gst-webrtc/'
 
 
 # Raspberry Pi OS Lite (November 19th 2024) -> Debian 12 (bookworm) -> libgstreamer1.0-dev 1.22.0-2+deb12u1
@@ -130,7 +130,7 @@ gst-inspect-1.0 rswebrtc
 # Plugin Details:
 #   Name                     rswebrtc
 #   Description              GStreamer plugin for high level WebRTC elements and a simple signaling server
-#   Filename                 /home/cavani/Workspace/programmable-matter-rpi/dev-projects/gst-webrtc/gst-plugins/aarch64-linux-gnu/libgstrswebrtc.so
+#   Filename                 /home/cavani/Workspace/smartrobot-rpi/dev-projects/gst-webrtc/gst-plugins/aarch64-linux-gnu/libgstrswebrtc.so
 #   Version                  0.13.5-RELEASE
 #   License                  MPL-2.0
 #   Source module            gst-plugin-webrtc
@@ -150,7 +150,7 @@ gst-inspect-1.0 rsrtp
 # Plugin Details:
 #   Name                     rsrtp
 #   Description              GStreamer Rust RTP Plugin
-#   Filename                 /home/cavani/Workspace/programmable-matter-rpi/dev-projects/gst-webrtc/gst-plugins/aarch64-linux-gnu/libgstrsrtp.so
+#   Filename                 /home/cavani/Workspace/smartrobot-rpi/dev-projects/gst-webrtc/gst-plugins/aarch64-linux-gnu/libgstrsrtp.so
 #   Version                  0.13.5-RELEASE
 #   License                  MPL-2.0
 #   Source module            gst-plugin-rtp

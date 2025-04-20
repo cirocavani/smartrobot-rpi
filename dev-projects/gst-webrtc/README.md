@@ -1019,7 +1019,7 @@ Freeing pipeline ...
           Upload: disabled, CSRF Token:
           Auth: disabled, Compression: disabled
          https: enabled, Cert: pki/olivia-v1_server.p12, Cert-Password:
-          Root: /home/cavani/Workspace/programmable-matter-rpi/dev-projects/gst-webrtc/web-app,
+          Root: /home/cavani/Workspace/smartrobot-rpi/dev-projects/gst-webrtc/web-app,
     TryFile404:
        Address: https://0.0.0.0:8000
     ======== [2025-03-20 11:02:05] ========
