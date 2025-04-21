@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-anyhow = { version = "1.0.97", features = ["backtrace"] }
+anyhow = { version = "1.0.98", features = ["backtrace"] }
 derive_more = { version = "2.0.1", features = ["display", "error"] }
 glib = "0.20.9"
 gstreamer = { version = "0.23.5", features = ["v1_22"] }
